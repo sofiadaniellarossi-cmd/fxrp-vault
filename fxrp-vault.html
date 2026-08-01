@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FXRP Vault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+<style>
+  :root{
+    --bg: #14171F;
+    --panel: #1B2030;
+    --panel-border: rgba(201,162,75,0.22);
+    --brass: #C9A24B;
+    --brass-dim: #8A7238;
+    --pulse: #4FD1AE;
+    --text: #EDE6D6;
+    --text-muted: #8B8FA3;
+    --danger: #E0716B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(201,162,75,0.10), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:32px 18px 64px;
+  }
+  .wrap{max-width:520px;margin:0 auto;}
+
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:30px;height:30px;border-radius:7px;
+    background:linear-gradient(135deg,var(--brass),#7a6229);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:700;color:#14171F;font-size:15px;
+  }
+  .brand-name{font-family:'Fraunces',serif;font-weight:600;font-size:19px;letter-spacing:0.2px;}
+
+  #connectBtn{
+    background:transparent;border:1px solid var(--panel-border);color:var(--text);
+    padding:9px 16px;border-radius:9px;font-family:'Inter',sans-serif;font-size:13px;
+    font-weight:500;cursor:pointer;transition:border-color .2s;
+  }
+  #connectBtn:hover{border-color:var(--brass);}
+  #connectBtn:focus-visible, button:focus-visible, a:focus-visible{outline:2px solid var(--pulse);outline-offset:2px;}
+  #connectBtn.connected{color:var(--pulse);border-color:rgba(79,209,174,0.4);}
+
+  .hero{
+    background:linear-gradient(180deg, var(--panel), #171B29);
+    border:1px solid var(--panel-border);
+    border-radius:18px;
+    padding:30px 26px 26px;
+    text-align:center;
+    margin-bottom:16px;
+  }
+  .hero-label{font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:10px;}
+  .hero-value{
+    font-family:'Fraunces',serif;font-weight:600;font-size:52px;line-height:1;
+    letter-spacing:-0.01em;
+    font-variant-numeric:tabular-nums;
+  }
+  .hero-value span.cents{font-size:28px;color:var(--text-muted);}
+  .hero-sub{margin-top:10px;font-size:13px;color:var(--text-muted);}
+  .hero-sub b{color:var(--text);font-weight:500;}
+
+  .goal-bar-wrap{margin-top:20px;}
+  .goal-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
+  .goal-track{height:6px;border-radius:4px;background:#252A3A;overflow:hidden;}
+  .goal-fill{height:100%;background:linear-gradient(90deg,var(--brass-dim),var(--brass));border-radius:4px;transition:width .6s ease;}
+
+  /* Oracle pulse strip — signature element */
+  .pulse-strip{
+    background:#0E1119;
+    border:1px solid var(--panel-border);
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:16px;
+    overflow:hidden;
+    position:relative;
+  }
+  .pulse-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--pulse);box-shadow:0 0 0 0 rgba(79,209,174,0.6);animation:ping 1.8s infinite;}
+  @keyframes ping{
+    0%{box-shadow:0 0 0 0 rgba(79,209,174,0.5);}
+    70%{box-shadow:0 0 0 7px rgba(79,209,174,0);}
+    100%{box-shadow:0 0 0 0 rgba(79,209,174,0);}
+  }
+  .pulse-title{font-size:11px;color:var(--text-muted);letter-spacing:0.06em;text-transform:uppercase;}
+  #pulseLog{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    line-height:1.9;
+    color:#7fe0c4;
+    height:78px;
+    overflow:hidden;
+    display:flex;flex-direction:column-reverse;
+  }
+  #pulseLog div{white-space:nowrap;opacity:0.85;}
+  #pulseLog div:first-child{opacity:1;color:#a9f0d8;}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:14px;
+  }
+  .panel h3{
+    font-family:'Fraunces',serif;font-weight:600;font-size:16px;margin:0 0 4px;
+  }
+  .panel p.desc{font-size:13px;color:var(--text-muted);margin:0 0 14px;}
+
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;color:var(--text-muted);margin-bottom:6px;}
+  .field input{
+    width:100%;background:#12151F;border:1px solid var(--panel-border);
+    border-radius:9px;padding:11px 12px;color:var(--text);
+    font-family:'IBM Plex Mono',monospace;font-size:14px;
+  }
+  .field input:focus-visible{outline:2px solid var(--pulse);outline-offset:1px;}
+
+  .action-btn{
+    width:100%;padding:12px;border-radius:10px;border:none;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:14px;cursor:pointer;
+    transition:transform .08s ease, opacity .2s;
+  }
+  .action-btn:active{transform:scale(0.98);}
+  .action-btn.primary{background:linear-gradient(135deg,var(--brass),#a3813c);color:#14171F;}
+  .action-btn.secondary{background:transparent;border:1px solid var(--panel-border);color:var(--text);}
+  .action-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+  .link-result{
+    margin-top:12px;padding:12px;background:#12151F;border-radius:9px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;word-break:break-all;color:var(--pulse);
+    display:none;
+  }
+  .link-result.show{display:block;}
+
+  .status-msg{font-size:12px;margin-top:10px;color:var(--text-muted);min-height:16px;}
+  .status-msg.error{color:var(--danger);}
+  .status-msg.success{color:var(--pulse);}
+
+  footer{text-align:center;font-size:11px;color:var(--text-muted);margin-top:24px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">F</div>
+      <div class="brand-name">FXRP Vault</div>
+    </div>
+    <button id="connectBtn">Conectar wallet</button>
+  </header>
+
+  <section class="hero">
+    <div class="hero-label">Ahorro total</div>
+    <div class="hero-value">$<span id="usdValue">0.00</span></div>
+    <div class="hero-sub">Valorizado con FTSO XRP/USD &middot; actualiza cada <b>1.8s</b></div>
+
+    <div class="goal-bar-wrap">
+      <div class="goal-row">
+        <span>Meta: $200.00</span>
+        <span id="goalPct">0%</span>
+      </div>
+      <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
+    </div>
+  </section>
+
+  <div class="pulse-strip">
+    <div class="pulse-head">
+      <div class="pulse-dot"></div>
+      <div class="pulse-title">Pulso del oráculo &middot; FTSOv2 Coston2</div>
+    </div>
+    <div id="pulseLog"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Depositar FXRP</h3>
+    <p class="desc">Bloqueá FXRP en el vault. Se refleja al instante en tu ahorro total.</p>
+    <div class="field">
+      <label for="depositAmount">Cantidad (FXRP)</label>
+      <input id="depositAmount" type="number" min="0" step="0.01" placeholder="0.00" />
+    </div>
+    <button class="action-btn primary" id="depositBtn">Depositar</button>
+    <div class="status-msg" id="depositStatus"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Enviar por link</h3>
+    <p class="desc">Bloqueá un monto y compartí un link. Quien lo abra conecta su wallet y lo reclama — sin necesitar su dirección de antemano.</p>
+    <div class="field">
+      <label for="sendAmount">Cantidad a enviar (FXRP)</label>
+      <input id="sendAmount" type="number" min="0" step="0.01" placeholder="0.00" />
+    </div>
+    <button class="action-btn primary" id="createLinkBtn">Generar link</button>
+    <div class="link-result" id="linkResult"></div>
+    <div class="status-msg" id="sendStatus"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Reclamar un link</h3>
+    <p class="desc">Pegá el ID de un link recibido para retirarlo a tu wallet conectada.</p>
+    <div class="field">
+      <label for="claimId">ID del link</label>
+      <input id="claimId" type="text" placeholder="0x..." />
+    </div>
+    <button class="action-btn secondary" id="claimBtn">Reclamar</button>
+    <div class="status-msg" id="claimStatus"></div>
+  </div>
+
+  <footer>
+    Modo demo con datos simulados. Para conectar el contrato real,<br/>
+    completá CONFIG.vaultAddress y CONFIG.vaultAbi en el código.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — reemplazar con los datos reales cuando el contrato
+   FXRPVault esté deployado en Coston2.
+   ============================================================ */
+const CONFIG = {
+  rpcUrl: "https://coston2-api.flare.network/ext/C/rpc",
+  chainIdHex: "0x72", // 114 en decimal
+  vaultAddress: null, // TODO: dirección de tu FXRPVault deployado
+  vaultAbi: [
+    // TODO: pegar el ABI real generado al compilar FXRPVault.sol
+    "function deposit(uint256 amount) external",
+    "function createSendLink(uint256 amount) external returns (bytes32)",
+    "function claim(bytes32 linkId) external",
+    "function getUsdValue(address user) external view returns (uint256, int8, uint64)",
+    "function balances(address) external view returns (uint256)"
+  ],
+  demoMode: true // poner en false cuando vaultAddress esté configurado
+};
+
+let provider = null, signer = null, userAddress = null, vaultContract = null;
+let currentPrice = 0.5234; // XRP/USD simulado, punto de partida
+let savedBalance = 128.40; // FXRP simulado
+
+const $ = id => document.getElementById(id);
+const connectBtn = $("connectBtn");
+
+function fmtUsd(n){ return n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+function renderHero(){
+  const usd = savedBalance * currentPrice;
+  $("usdValue").textContent = fmtUsd(usd);
+  const pct = Math.min(100, Math.round((usd/200)*100));
+  $("goalFill").style.width = pct + "%";
+  $("goalPct").textContent = pct + "%";
+}
+
+function pushPulse(){
+  // Simula una pequeña variación de precio real de mercado
+  currentPrice = Math.max(0.01, currentPrice + (Math.random()-0.5)*0.004);
+  const ts = new Date().toLocaleTimeString('es-AR', {hour12:false});
+  const line = document.createElement('div');
+  line.textContent = `[${ts}] getFeedById(XRP/USD) → $${currentPrice.toFixed(4)}`;
+  const log = $("pulseLog");
+  log.prepend(line);
+  while(log.children.length > 6) log.removeChild(log.lastChild);
+  renderHero();
+}
+
+setInterval(pushPulse, 1800);
+pushPulse();
+
+/* ---------------- Wallet connect ---------------- */
+async function connectWallet(){
+  if(!window.ethereum){
+    alert("No se detectó una wallet compatible (MetaMask, Bifrost, etc). Instalá una extensión de wallet para continuar.");
+    return;
+  }
+  try{
+    provider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await provider.send("eth_requestAccounts", []);
+    userAddress = accounts[0];
+    signer = await provider.getSigner();
+
+    // Intentar cambiar a Coston2; si la red no está agregada, se ofrece agregarla.
+    try{
+      await window.ethereum.request({ method:"wallet_switchEthereumChain", params:[{chainId: CONFIG.chainIdHex}] });
+    }catch(switchErr){
+      if(switchErr.code === 4902){
+        await window.ethereum.request({
+          method:"wallet_addEthereumChain",
+          params:[{
+            chainId: CONFIG.chainIdHex,
+            chainName:"Flare Testnet Coston2",
+            nativeCurrency:{name:"C2FLR", symbol:"C2FLR", decimals:18},
+            rpcUrls:[CONFIG.rpcUrl],
+            blockExplorerUrls:["https://coston2-explorer.flare.network/"]
+          }]
+        });
+      }
+    }
+
+    if(CONFIG.vaultAddress && !CONFIG.demoMode){
+      vaultContract = new ethers.Contract(CONFIG.vaultAddress, CONFIG.vaultAbi, signer);
+    }
+
+    connectBtn.textContent = userAddress.slice(0,6) + "…" + userAddress.slice(-4);
+    connectBtn.classList.add("connected");
+  }catch(err){
+    console.error(err);
+    alert("No se pudo conectar la wallet: " + (err.message || err));
+  }
+}
+
+connectBtn.addEventListener("click", connectWallet);
+
+/* ---------------- Deposit ---------------- */
+$("depositBtn").addEventListener("click", async () => {
+  const amt = parseFloat($("depositAmount").value);
+  const status = $("depositStatus");
+  if(!amt || amt <= 0){ status.textContent = "Ingresá una cantidad válida."; status.className="status-msg error"; return; }
+
+  if(vaultContract){
+    try{
+      status.textContent = "Confirmá la transacción en tu wallet…"; status.className="status-msg";
+      const tx = await vaultContract.deposit(ethers.parseUnits(amt.toString(), 6));
+      await tx.wait();
+      status.textContent = "Depósito confirmado on-chain."; status.className="status-msg success";
+    }catch(err){
+      status.textContent = "Error: " + (err.reason || err.message); status.className="status-msg error";
+    }
+  } else {
+    savedBalance += amt;
+    renderHero();
+    status.textContent = "Depósito simulado (modo demo) — se sumó al ahorro total.";
+    status.className = "status-msg success";
+    $("depositAmount").value = "";
+  }
+});
+
+/* ---------------- Create send link ---------------- */
+$("createLinkBtn").addEventListener("click", async () => {
+  const amt = parseFloat($("sendAmount").value);
+  const status = $("sendStatus");
+  const result = $("linkResult");
+  if(!amt || amt <= 0 || amt > savedBalance){
+    status.textContent = "Cantidad inválida o mayor a tu saldo."; status.className="status-msg error"; return;
+  }
+
+  if(vaultContract){
+    try{
+      status.textContent = "Generando link…"; status.className="status-msg";
+      const tx = await vaultContract.createSendLink(ethers.parseUnits(amt.toString(), 6));
+      const receipt = await tx.wait();
+      status.textContent = "Link creado on-chain."; status.className="status-msg success";
+      result.textContent = "ID de link: revisá el evento LinkCreated en el explorer para el ID exacto.";
+      result.classList.add("show");
+    }catch(err){
+      status.textContent = "Error: " + (err.reason || err.message); status.className="status-msg error";
+    }
+  } else {
+    savedBalance -= amt;
+    renderHero();
+    const fakeId = "0x" + Array.from({length:16}, ()=>Math.floor(Math.random()*16).toString(16)).join("");
+    result.textContent = `miapp.com/claim?id=${fakeId}`;
+    result.classList.add("show");
+    status.textContent = "Link generado (modo demo) — compartilo con el receptor.";
+    status.className = "status-msg success";
+    $("sendAmount").value = "";
+  }
+});
+
+/* ---------------- Claim ---------------- */
+$("claimBtn").addEventListener("click", async () => {
+  const id = $("claimId").value.trim();
+  const status = $("claimStatus");
+  if(!id){ status.textContent = "Pegá un ID de link válido."; status.className="status-msg error"; return; }
+
+  if(vaultContract){
+    try{
+      status.textContent = "Reclamando…"; status.className="status-msg";
+      const tx = await vaultContract.claim(id);
+      await tx.wait();
+      status.textContent = "¡Reclamado! El FXRP llegó a tu wallet."; status.className="status-msg success";
+    }catch(err){
+      status.textContent = "Error: " + (err.reason || err.message); status.className="status-msg error";
+    }
+  } else {
+    status.textContent = "Reclamo simulado (modo demo) — en producción esto transfiere FXRP real a tu wallet.";
+    status.className = "status-msg success";
+  }
+});
+
+renderHero();
+</script>
+</body>
+</html>

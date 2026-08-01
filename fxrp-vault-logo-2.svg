@@ -1,0 +1,60 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#1B2030"/>
+      <stop offset="100%" stop-color="#14171F"/>
+    </radialGradient>
+    <linearGradient id="brass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E3C583"/>
+      <stop offset="50%" stop-color="#C9A24B"/>
+      <stop offset="100%" stop-color="#8A7238"/>
+    </linearGradient>
+    <linearGradient id="brassRing" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#C9A24B"/>
+      <stop offset="100%" stop-color="#7a6229"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo -->
+  <rect width="512" height="512" rx="96" fill="url(#bgGlow)"/>
+
+  <!-- Rayos sutiles (nod al sol de Flare), como agujas de un dial de bóveda -->
+  <g stroke="#C9A24B" stroke-width="2" opacity="0.35">
+    <line x1="256" y1="70" x2="256" y2="100"/>
+    <line x1="256" y1="412" x2="256" y2="442"/>
+    <line x1="70" y1="256" x2="100" y2="256"/>
+    <line x1="412" y1="256" x2="442" y2="256"/>
+    <line x1="131" y1="131" x2="152" y2="152"/>
+    <line x1="360" y1="360" x2="381" y2="381"/>
+    <line x1="381" y1="131" x2="360" y2="152"/>
+    <line x1="152" y1="360" x2="131" y2="381"/>
+  </g>
+
+  <!-- Anillo exterior tipo puerta de bóveda -->
+  <circle cx="256" cy="256" r="156" fill="none" stroke="url(#brassRing)" stroke-width="6" opacity="0.9"/>
+  <circle cx="256" cy="256" r="138" fill="none" stroke="#C9A24B" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- Pernos de la puerta de bóveda -->
+  <g fill="#C9A24B" opacity="0.85">
+    <circle cx="256" cy="100" r="5"/>
+    <circle cx="256" cy="412" r="5"/>
+    <circle cx="100" cy="256" r="5"/>
+    <circle cx="412" cy="256" r="5"/>
+    <circle cx="152" cy="152" r="4"/>
+    <circle cx="360" cy="152" r="4"/>
+    <circle cx="152" cy="360" r="4"/>
+    <circle cx="360" cy="360" r="4"/>
+  </g>
+
+  <!-- Disco central -->
+  <circle cx="256" cy="256" r="104" fill="url(#brass)"/>
+  <circle cx="256" cy="256" r="104" fill="none" stroke="#14171F" stroke-width="2" opacity="0.15"/>
+
+  <!-- Marca "F" -->
+  <text x="256" y="296" font-family="Georgia, 'Fraunces', serif" font-weight="700"
+        font-size="128" text-anchor="middle" fill="#14171F">F</text>
+
+  <!-- Punto pulso (referencia al oráculo en vivo) -->
+  <circle cx="352" cy="176" r="9" fill="#4FD1AE"/>
+  <circle cx="352" cy="176" r="15" fill="none" stroke="#4FD1AE" stroke-width="2" opacity="0.4"/>
+</svg>
